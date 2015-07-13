@@ -1,0 +1,54 @@
+﻿<Window x:Class="TestSync.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:TestSync.UI"
+        xmlns:ts="clr-namespace:TestSync"
+        Title="TestSync" Height="350" Width="525" Loaded="MainWindow_OnLoaded" Closed="MainWindow_OnClosed">
+    <Window.Resources>
+
+<!--         DataTemplate for binding -->
+        <DataTemplate DataType="{x:Type ts:SyncRectangle}">
+            <ui:RectangleView></ui:RectangleView>
+        </DataTemplate>
+
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="File">
+                <MenuItem Header="Add" Click="AddObject_Click"></MenuItem>
+                <MenuItem Header="Delete"></MenuItem>
+                <Separator></Separator>
+                <MenuItem Header="Exit" Click="Exit_Click"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="Test" Click="TestX_Click"/>
+                <MenuItem Header="About"/>
+            </MenuItem>
+        </Menu>
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Shapes}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas Name="MainCanvas" Background="#FFD0D0D0">
+                    </Canvas>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding X, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Setter Property="Canvas.Top" Value="{Binding Y, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Setter Property="Width" Value="{Binding Width, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Setter Property="Height" Value="{Binding Height, UpdateSourceTrigger=PropertyChanged}"/>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type ts:SyncRectangle}">
+                    <ui:RectangleView></ui:RectangleView>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>
