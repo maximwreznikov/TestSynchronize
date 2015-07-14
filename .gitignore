@@ -2,3 +2,5 @@ TestSync/bin/Debug/
 TestSync.v12.suo
 TestSync/obj/Debug/
 TestSync/TestSync.csproj.user
+TestSync/bin/Release/
+TestSync/obj/Release/

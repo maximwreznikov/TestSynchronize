@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -33,6 +34,20 @@ namespace TestSync.UI
             this.DataContext = this;
         }
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+//            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
+//            source.AddHook(WndProc);
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            // Handle messages...
+
+            return IntPtr.Zero;
+        }
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -43,13 +58,15 @@ namespace TestSync.UI
             SyncPool.Instance.Startup();
 
             SyncPool.Instance.AttachCollection(_shapes);
-            _shapes.Add(ObjectPool.Instance.CreateRandomRectangle());
+
+            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
+            source.AddHook(WndProc);
         }
 
 
         private void AddObject_Click(object sender, RoutedEventArgs e)
         {
-            _shapes.Add(ObjectPool.Instance.CreateRandomRectangle());
+            _shapes.Add(ObjectFactory.Instance.CreateRandomRectangle());
         }
 
         private void MainWindow_OnClosed(object sender, EventArgs e)

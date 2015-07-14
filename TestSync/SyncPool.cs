@@ -10,8 +10,8 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace TestSync
 {
@@ -53,7 +53,7 @@ namespace TestSync
     /// </summary>
     class SyncPool
     {
-        public static readonly string PipeName = "PipesEnroll";
+        public static readonly string MappedFileName = "TestSyncMapedFileName";
 
         private readonly List<SynchronizableObject> _syncObjects = new List<SynchronizableObject>();
         private ObservableCollection<SynchronizableObject> _objectCollection = null;
@@ -70,30 +70,71 @@ namespace TestSync
         }
         #endregion
 
-        #region Pipes iteraction
+        #region Memory mapped file iteraction
 
-        private PipeServer _pipeServer;
-        private PipeClient _pipeClient;
+        private MMFileController    _mmFile;
+        private bool                _needSave;
+        private Timer               _saveTimer;
+        private Timer               _updateTimer;
+
         public void Startup()
         {
-            var appGuid = Guid.NewGuid();
-            _pipeServer = new PipeServer(appGuid, PipeName);
-            _pipeServer.ReceiveMessage += OnReceiveMessage;
-            _pipeServer.Run();
+            _needSave = false;
+            _mmFile = new MMFileController(MappedFileName);
+            _mmFile.Open();
 
-            _pipeClient = new PipeClient(appGuid, PipeName);
-            _pipeClient.Run();
+            // Create a timer for save collection state
+            _saveTimer = new Timer();
+            _saveTimer.Elapsed += SaveObjects;
+            _saveTimer.Interval = 50;
+            _saveTimer.Enabled = true;
+            _saveTimer.Start();
+
+            // Create a timer for update collection state
+            _updateTimer = new Timer();
+            _updateTimer.Elapsed += UpdateObjects;
+            _updateTimer.Interval = 40;
+            _updateTimer.Enabled = true;
+            _updateTimer.Start();
         }
 
-        private void OnReceiveMessage(string message)
+        private void SaveObjects(object source, ElapsedEventArgs e)
         {
-            _syncObjects[0].Synchronize(message);
+            SaveObject();
+        }
+
+        private void UpdateObjects(object source, ElapsedEventArgs e)
+        {
+            SyncObject();
+        }
+
+        private void SaveObject()
+        {
+            if (_objectCollection == null) return;
+            if (!_needSave) return;
+
+            _saveTimer.Stop();
+            _needSave = false;
+            _mmFile.SaveCollection(_objectCollection);
+            _saveTimer.Start();
+        }
+
+        private void SyncObject()
+        {
+            if (_objectCollection == null) return;
+
+            _updateTimer.Stop();
+            _mmFile.SyncCollection(_objectCollection);
+            _updateTimer.Start();
         }
 
         public void Destroy()
         {
-            _pipeServer.Stop();
-            _pipeClient.Stop();
+            _mmFile.Close();
+            _updateTimer.Elapsed -= UpdateObjects;
+            _saveTimer.Elapsed -= SaveObjects;
+            _updateTimer.Enabled = false;
+            _saveTimer.Enabled = false;
         }
         
         #endregion
@@ -101,8 +142,10 @@ namespace TestSync
         public void AttachCollection(ObservableCollection<SynchronizableObject> objectCollection)
         {
             _objectCollection = objectCollection;
-
             _objectCollection.CollectionChanged += OnObservableCollectionChanged;
+
+            // sync with existing collection
+            _mmFile.SyncCollection(_objectCollection);
         }
 
         private void OnObservableCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -126,21 +169,22 @@ namespace TestSync
             if (obj == null) return;
             obj.SynchronizeProperty += OnObjectSynchronizeProperty;
             _syncObjects.Add(obj);
+            _needSave = true;
         }
 
         public void DetachObject(SynchronizableObject obj)
         {
             if (obj == null) return;
-            if(_syncObjects.Remove(obj))
+            if (_syncObjects.Remove(obj))
+            {
                 obj.SynchronizeProperty -= OnObjectSynchronizeProperty;
-            
+                _needSave = true;
+            }
         }
 
         private void OnObjectSynchronizeProperty(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
-            var obj = sender as SynchronizableObject;
-            var objectData = obj.Serialize();
-            _pipeClient.ProcessMessage(objectData);
+            _needSave = true;
         }
     }
 }

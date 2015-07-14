@@ -6,7 +6,10 @@ using System.Windows.Media;
 namespace TestSync
 {
 
-    internal class ObjectPool
+    /// <summary>
+    /// Factory for objects
+    /// </summary>
+    internal class ObjectFactory
     {
         private readonly Color [] ColorPalette =
         {
@@ -14,9 +17,9 @@ namespace TestSync
         };
 
         #region Singleton
-        private static readonly Lazy<ObjectPool> _instance = new Lazy<ObjectPool>(() => new ObjectPool());
-        public static ObjectPool Instance { get { return _instance.Value; } }
-        private ObjectPool()
+        private static readonly Lazy<ObjectFactory> _instance = new Lazy<ObjectFactory>(() => new ObjectFactory());
+        public static ObjectFactory Instance { get { return _instance.Value; } }
+        private ObjectFactory()
         { }
         #endregion
         
@@ -32,6 +35,13 @@ namespace TestSync
             int index = r.Next(0, ColorPalette.Length - 1);
 
             var newRect = new SyncRectangle(x, y, width, height, ColorPalette[index]);
+            return newRect;
+        }
+
+        public SyncRectangle CreateRectangleFromXml(string xml)
+        {
+            var newRect = new SyncRectangle();
+            newRect.Synchronize(xml);
             return newRect;
         }
     }

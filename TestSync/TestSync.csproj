@@ -53,10 +53,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MMFileController.cs" />
     <Compile Include="UI\MoveThumb.cs" />
-    <Compile Include="ObjectPool.cs" />
-    <Compile Include="PipeClient.cs" />
-    <Compile Include="PipeServer.cs" />
+    <Compile Include="ObjectFactory.cs" />
     <Compile Include="UI\RectangleView.xaml.cs">
       <DependentUpon>RectangleView.xaml</DependentUpon>
     </Compile>
