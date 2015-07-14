@@ -7,11 +7,17 @@ using System.Threading.Tasks;
 
 namespace TestSync
 {
+    /// <summary>
+    /// Interface for object which can synchronized between process
+    /// </summary>
     interface ISynchronizePropertyChanged
     {
         event PropertyChangedEventHandler SynchronizeProperty;
     }
 
+    /// <summary>
+    /// Interface for Synchronizable object
+    /// </summary>
     public abstract class SynchronizableObject : INotifyPropertyChanged, ISynchronizePropertyChanged
     {
         #region ISynchronizePropertyChanged Members

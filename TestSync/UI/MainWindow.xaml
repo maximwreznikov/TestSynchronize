@@ -20,13 +20,12 @@
         <Menu Grid.Row="0">
             <MenuItem Header="File">
                 <MenuItem Header="Add" Click="AddObject_Click"></MenuItem>
-                <MenuItem Header="Delete"></MenuItem>
                 <Separator></Separator>
                 <MenuItem Header="Exit" Click="Exit_Click"></MenuItem>
             </MenuItem>
             <MenuItem Header="Help">
-                <MenuItem Header="Test" Click="TestX_Click"/>
-                <MenuItem Header="About"/>
+                <MenuItem Header="TestX" Click="TestX_Click"/>
+                <MenuItem Header="TestY" Click="TestY_Click"/>
             </MenuItem>
         </Menu>
         <ItemsControl Grid.Row="1" ItemsSource="{Binding Shapes}">

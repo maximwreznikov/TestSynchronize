@@ -18,7 +18,7 @@ namespace TestSync
     /// </summary>
     class MMFileAdapter
     {
-        public readonly static int MaxSize = 4096;
+        public readonly static int MaxSize = 8192;
 
         private readonly string _mappedFileName;
         private readonly string _mutexName;
@@ -56,19 +56,32 @@ namespace TestSync
                 _nameMutex.WaitOne();
 
                 int current = 0;
-                WriteString(accessor, ref current, _appGuid.ToString());
 
-                accessor.Write(current, (Int32)collection.Count);
-                current += sizeof(Int32);
-                for (int i = 0; i < collection.Count; i++)
+                try
                 {
-                    // save collection element
-                    string data = collection[i].Serialize();
+                    WriteString(accessor, ref current, _appGuid.ToString());
 
-                    WriteString(accessor, ref current, data);
+                    accessor.Write(current, (Int32) collection.Count);
+                    current += sizeof (Int32);
+                    for (int i = 0; i < collection.Count; i++)
+                    {
+                        // save collection element
+                        string data = collection[i].Serialize();
+
+                        WriteString(accessor, ref current, data);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    MessageBox.Show("Too many objects!");
+                    NotificationManager.CloseAllInstances();
+                }
+                finally
+                {
+                    _nameMutex.ReleaseMutex();
                 }
 
-                _nameMutex.ReleaseMutex();
 
                 Debug.WriteLine("Saved data");
             }
@@ -111,6 +124,7 @@ namespace TestSync
         }
         #endregion
 
+        # region String operations
         private void WriteString(MemoryMappedViewAccessor accessor, ref int current, string data)
         {
             byte[] buffer = ConvertStringToByteArray(data);
@@ -134,37 +148,41 @@ namespace TestSync
             string xmlData = ConvertByteArrayToString(buffer);
             return xmlData;
         }
+        #endregion
 
         private void SyncOrAdd(string xmlData, int i, ObservableCollection<SynchronizableObject> collection, int cachedMax)
         {
-            try
+            if (string.IsNullOrEmpty(xmlData)) return;
+            
+            if (i < cachedMax)
             {
-                if (!string.IsNullOrEmpty(xmlData))
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (i < cachedMax)
+                    try
                     {
                         collection[i].Synchronize(xmlData);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            try
-                            {
-                                collection.Add(ObjectFactory.Instance.CreateRectangleFromXml(xmlData));
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine("Cant parse data {0}", xmlData);
-                            }
-                        });
+                        Debug.WriteLine("Cant parse data {0}", xmlData);
                     }
-                }
+                });
             }
-            catch (Exception ex)
+            else
             {
-                Debug.WriteLine("Cant parse data {0}", xmlData);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        collection.Add(ObjectFactory.Instance.CreateRectangleFromXml(xmlData));
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Cant parse data {0}", xmlData);
+                    }
+                });
             }
+            
         }
 
         # region String convetation

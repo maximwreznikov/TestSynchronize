@@ -72,9 +72,20 @@ namespace TestSync.UI
 
         private void TestX_Click(object sender, RoutedEventArgs e)
         {
+            if (_shapes.Count <= 0) return;
+
             var rect = _shapes[0] as SyncRectangle;
             var x = rect.X;
-            rect.X = x + 100;
+            rect.X = x + 20;
+        }
+
+        private void TestY_Click(object sender, RoutedEventArgs e)
+        {
+            if (_shapes.Count <= 0) return;
+
+            var rect = _shapes[0] as SyncRectangle;
+            var y = rect.Y;
+            rect.Y = y + 20;
         }
     }
 }

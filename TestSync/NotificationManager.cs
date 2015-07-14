@@ -22,7 +22,7 @@ namespace TestSync
 
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            //filter the SYNC_MESSAGE
+            // filter the SYNC_MESSAGE
             if (msg == SYNC_MESSAGE)
             {
                 if(SyncState != null)
@@ -51,9 +51,20 @@ namespace TestSync
                     }
                 }
             }
-            else
+        }
+
+        public static void CloseAllInstances()
+        {
+            //get this running process
+            Process proc = Process.GetCurrentProcess();
+            //get all other (possible) running instances
+            Process[] processes = Process.GetProcessesByName(proc.ProcessName);
+
+
+            //iterate through all running target applications
+            foreach (Process p in processes)
             {
-                MessageBox.Show("No other running applications found.");
+                p.Kill();
             }
         }
     }
