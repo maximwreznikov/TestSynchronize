@@ -72,7 +72,7 @@ namespace TestSync
 
         #region Memory mapped file iteraction
 
-        private MMFileController    _mmFile;
+        private MMFileAdapter    _mmFile;
         private bool                _needSave;
         private Timer               _saveTimer;
         private Timer               _updateTimer;
@@ -80,7 +80,8 @@ namespace TestSync
         public void Startup()
         {
             _needSave = false;
-            _mmFile = new MMFileController(MappedFileName);
+            var appGuid = Guid.NewGuid();
+            _mmFile = new MMFileAdapter(appGuid, MappedFileName);
             _mmFile.Open();
 
             // Create a timer for save collection state
