@@ -55,8 +55,8 @@ namespace TestSync
     {
         public static readonly string MappedFileName = "TestSyncMapedFileName";
 
-        private readonly List<SynchronizableObject> _syncObjects = new List<SynchronizableObject>();
-        private ObservableCollection<SynchronizableObject> _objectCollection = null;
+        private readonly List<SynchronizableObject>         _syncObjects = new List<SynchronizableObject>();
+        private ObservableCollection<SynchronizableObject>  _objectCollection = null;
 
         #region Singleton
         private static readonly Lazy<SyncPool> _instance = new Lazy<SyncPool>(() => new SyncPool());
@@ -72,41 +72,37 @@ namespace TestSync
 
         #region Memory mapped file iteraction
 
-        private MMFileAdapter    _mmFile;
+        private MMFileAdapter       _mmFile;
         private bool                _needSave;
         private Timer               _saveTimer;
-        private Timer               _updateTimer;
+        private NotificationManager _syncManager;
 
-        public void Startup()
+        public void Startup(NotificationManager syncManager)
         {
-            _needSave = false;
+            _syncManager = syncManager;
+            _syncManager.SyncState += OnSyncState;
+            
             var appGuid = Guid.NewGuid();
             _mmFile = new MMFileAdapter(appGuid, MappedFileName);
             _mmFile.Open();
 
+            _needSave = false;
             // Create a timer for save collection state
             _saveTimer = new Timer();
             _saveTimer.Elapsed += SaveObjects;
             _saveTimer.Interval = 50;
             _saveTimer.Enabled = true;
             _saveTimer.Start();
+        }
 
-            // Create a timer for update collection state
-            _updateTimer = new Timer();
-            _updateTimer.Elapsed += UpdateObjects;
-            _updateTimer.Interval = 40;
-            _updateTimer.Enabled = true;
-            _updateTimer.Start();
+        private void OnSyncState()
+        {
+            SyncObject();
         }
 
         private void SaveObjects(object source, ElapsedEventArgs e)
         {
             SaveObject();
-        }
-
-        private void UpdateObjects(object source, ElapsedEventArgs e)
-        {
-            SyncObject();
         }
 
         private void SaveObject()
@@ -117,6 +113,7 @@ namespace TestSync
             _saveTimer.Stop();
             _needSave = false;
             _mmFile.SaveCollection(_objectCollection);
+            _syncManager.UpdateAll();
             _saveTimer.Start();
         }
 
@@ -124,17 +121,14 @@ namespace TestSync
         {
             if (_objectCollection == null) return;
 
-            _updateTimer.Stop();
             _mmFile.SyncCollection(_objectCollection);
-            _updateTimer.Start();
         }
 
         public void Destroy()
         {
             _mmFile.Close();
-            _updateTimer.Elapsed -= UpdateObjects;
+            _syncManager.SyncState -= OnSyncState;
             _saveTimer.Elapsed -= SaveObjects;
-            _updateTimer.Enabled = false;
             _saveTimer.Enabled = false;
         }
         

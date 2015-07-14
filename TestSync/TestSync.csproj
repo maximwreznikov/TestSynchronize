@@ -54,6 +54,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="MMFileAdapter.cs" />
+    <Compile Include="NotificationManager.cs" />
     <Compile Include="UI\MoveThumb.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="UI\RectangleView.xaml.cs">

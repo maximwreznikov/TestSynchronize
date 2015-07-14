@@ -41,12 +41,7 @@ namespace TestSync.UI
 //            source.AddHook(WndProc);
         }
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            // Handle messages...
 
-            return IntPtr.Zero;
-        }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
@@ -55,14 +50,15 @@ namespace TestSync.UI
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            SyncPool.Instance.Startup();
-
-            SyncPool.Instance.AttachCollection(_shapes);
+            var syncManager = new NotificationManager();
 
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
-            source.AddHook(WndProc);
-        }
+            source.AddHook(syncManager.WndProc);
 
+            SyncPool.Instance.Startup(syncManager);
+
+            SyncPool.Instance.AttachCollection(_shapes);
+        }
 
         private void AddObject_Click(object sender, RoutedEventArgs e)
         {
