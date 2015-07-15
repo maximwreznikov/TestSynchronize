@@ -18,7 +18,7 @@ namespace TestSync
     /// </summary>
     class MMFileAdapter
     {
-        public readonly static int MaxSize = 8192;
+        public readonly static int MaxSize = 16392;
 
         private readonly string _mappedFileName;
         private readonly string _mutexName;
@@ -27,6 +27,7 @@ namespace TestSync
         private Mutex _nameMutex;
         private MemoryMappedFile _fileHandle;
 
+        #region Initialize/Dispose
         public MMFileAdapter(Guid appGuid, string mappedFileName)
         {
             _appGuid = appGuid;
@@ -45,6 +46,7 @@ namespace TestSync
         {
             _nameMutex.Close();
         }
+        #endregion
 
         #region Collection operation
 
@@ -95,8 +97,6 @@ namespace TestSync
             using (
                 MemoryMappedViewAccessor accessor = _fileHandle.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read))
             {
-                var cachedMax = collection.Count;
-
                 //read
                 _nameMutex.WaitOne();
 
@@ -111,11 +111,12 @@ namespace TestSync
                         Int32 count = accessor.ReadInt32(current);
                         current += sizeof (Int32);
 
+                        string[] serializedCollection = new string[count];
                         for (int i = 0; i < count; i++)
                         {
-                            var xmlData = ReadString(accessor, ref current);
-                            SyncOrAdd(xmlData, i, collection, cachedMax);
+                            serializedCollection[i] = ReadString(accessor, ref current);
                         }
+                        SyncCollection(serializedCollection, collection);
                     }
                 }
 
@@ -150,39 +151,34 @@ namespace TestSync
         }
         #endregion
 
-        private void SyncOrAdd(string xmlData, int i, ObservableCollection<SynchronizableObject> collection, int cachedMax)
+        private void SyncCollection(string[] serializedCollection, ObservableCollection<SynchronizableObject> collection)
         {
-            if (string.IsNullOrEmpty(xmlData)) return;
-            
-            if (i < cachedMax)
+            int i = 0;
+            for (i = 0; i < collection.Count && i < serializedCollection.Length; i++)
+            {
+                collection[i].Synchronize(serializedCollection[i]);
+            }
+
+            // additional object
+            while (i < serializedCollection.Length)
+            {
+                var xmlData = serializedCollection[i];
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    collection.Add(ObjectFactory.Instance.CreateRectangleFromXml(xmlData));
+                });
+                i++;
+            }
+
+            // remove last
+            while (i < collection.Count)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    try
-                    {
-                        collection[i].Synchronize(xmlData);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Cant parse data {0}", xmlData);
-                    }
+                    collection.RemoveAt(collection.Count - 1);
                 });
+                i++;
             }
-            else
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    try
-                    {
-                        collection.Add(ObjectFactory.Instance.CreateRectangleFromXml(xmlData));
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Cant parse data {0}", xmlData);
-                    }
-                });
-            }
-            
         }
 
         # region String convetation

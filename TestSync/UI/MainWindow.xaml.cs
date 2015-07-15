@@ -34,14 +34,6 @@ namespace TestSync.UI
             this.DataContext = this;
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-//            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
-//            source.AddHook(WndProc);
-        }
-
-
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
@@ -86,6 +78,19 @@ namespace TestSync.UI
             var rect = _shapes[0] as SyncRectangle;
             var y = rect.Y;
             rect.Y = y + 20;
+        }
+
+        private void TestDelete(object sender, RoutedEventArgs e)
+        {
+            if (_shapes.Count <= 0) return;
+
+            _shapes.RemoveAt(0);
+        }
+
+        private void TestAdd(object sender, RoutedEventArgs e)
+        {
+            for (int i = 0; i < 10; i++)
+                _shapes.Add(ObjectFactory.Instance.CreateRandomRectangle());
         }
     }
 }

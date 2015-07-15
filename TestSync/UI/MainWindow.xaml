@@ -5,12 +5,6 @@
         xmlns:ts="clr-namespace:TestSync"
         Title="TestSync" Height="350" Width="525" Loaded="MainWindow_OnLoaded" Closed="MainWindow_OnClosed">
     <Window.Resources>
-
-<!--         DataTemplate for binding -->
-        <DataTemplate DataType="{x:Type ts:SyncRectangle}">
-            <ui:RectangleView></ui:RectangleView>
-        </DataTemplate>
-
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -26,6 +20,8 @@
             <MenuItem Header="Help">
                 <MenuItem Header="TestX" Click="TestX_Click"/>
                 <MenuItem Header="TestY" Click="TestY_Click"/>
+                <MenuItem Header="TestAdd" Click="TestAdd"/>
+                <MenuItem Header="TestDelete" Click="TestDelete"/>
             </MenuItem>
         </Menu>
         <ItemsControl Grid.Row="1" ItemsSource="{Binding Shapes}">
@@ -44,6 +40,7 @@
                 </Style>
             </ItemsControl.ItemContainerStyle>
             <ItemsControl.ItemTemplate>
+                <!-- DataTemplate for binding -->
                 <DataTemplate DataType="{x:Type ts:SyncRectangle}">
                     <ui:RectangleView></ui:RectangleView>
                 </DataTemplate>
